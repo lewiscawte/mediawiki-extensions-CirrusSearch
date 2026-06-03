@@ -1,20 +1,20 @@
 @api @update
 Feature: Search backend updates
   Scenario: Deleted pages are removed from the index
-    Given a page named DeleteMe exists
-      And I api search for DeleteMe
-      And DeleteMe is the first api search result
-     When I delete DeleteMe
-      And I api search for DeleteMe
+    Given a page named UpdateGeneralDeleteMe exists
+      And I api search for UpdateGeneralDeleteMe
+      And UpdateGeneralDeleteMe is the first api search result
+     When I delete UpdateGeneralDeleteMe
+      And I api search for UpdateGeneralDeleteMe
      Then there are no api search results
 
   Scenario: Deleted redirects are removed from the index
-    Given a page named DeleteMe exists
-      And a page named DeleteMeRedirect exists with contents #REDIRECT [[DeleteMe]]
-      And I api search for DeleteMeRedirect
-      And DeleteMe is the first api search result
-     When I delete DeleteMeRedirect
-     Then I api search for DeleteMeRedirect
+    Given a page named UpdateGeneralDeleteMe exists
+      And a page named UpdateGeneralDeleteMeRedirect exists with contents #REDIRECT [[UpdateGeneralDeleteMe]]
+      And I api search for UpdateGeneralDeleteMeRedirect
+      And UpdateGeneralDeleteMe is the first api search result
+     When I delete UpdateGeneralDeleteMeRedirect
+     Then I api search for UpdateGeneralDeleteMeRedirect
       And there are no api search results
 
   Scenario: Altered pages are updated in the index
