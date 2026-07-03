@@ -22,10 +22,14 @@ class CheckerTest extends CirrusIntegrationTestCase {
 	 * @return int the redirect page's id
 	 */
 	private function createRedirectPage(): int {
-		$target = $this->getNonexistingTestPage( Title::makeTitle( NS_MAIN, 'CheckerTestTarget' ) );
+		$target = $this->getNonexistingTestPage(
+			Title::makeTitle( $this->getDefaultWikitextNS(), 'CheckerTestTarget' )
+		);
 		$this->editPage( $target, 'Target content' );
-		$redirect = $this->getNonexistingTestPage( Title::makeTitle( NS_MAIN, 'CheckerTestRedirect' ) );
-		$status = $this->editPage( $redirect, '#REDIRECT [[CheckerTestTarget]]' );
+		$redirect = $this->getNonexistingTestPage(
+			Title::makeTitle( $this->getDefaultWikitextNS(), 'CheckerTestRedirect' )
+		);
+		$status = $this->editPage( $redirect, '#REDIRECT [[' . $target->getTitle()->getPrefixedText() . ']]' );
 		return $status->getNewRevision()->getPage()->getId();
 	}
 
@@ -59,7 +63,11 @@ class CheckerTest extends CirrusIntegrationTestCase {
 	 * @param string|null $pageType page_type stored on the document, or null when absent
 	 */
 	private function singleResultSet( string $docId, ?string $pageType ): \Elastica\ResultSet {
-		$source = [ 'namespace' => NS_MAIN, 'title' => 'CheckerTestRedirect', 'version' => 1 ];
+		$source = [
+			'namespace' => $this->getDefaultWikitextNS(),
+			'title' => 'CheckerTestRedirect',
+			'version' => 1,
+		];
 		if ( $pageType !== null ) {
 			$source['page_type'] = $pageType;
 		}

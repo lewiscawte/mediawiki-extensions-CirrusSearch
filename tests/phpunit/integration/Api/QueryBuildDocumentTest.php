@@ -5,6 +5,7 @@ namespace CirrusSearch\Tests\Api;
 use CirrusSearch\CirrusConfigNames;
 use CirrusSearch\CirrusIntegrationTestCaseTrait;
 use CirrusSearch\CirrusSearch;
+use CirrusSearch\Util;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\Tests\Api\ApiTestCase;
@@ -59,7 +60,13 @@ class QueryBuildDocumentTest extends ApiTestCase {
 	 * @covers \CirrusSearch\Api\QueryBuildDocument
 	 */
 	public function test_content_extraction() {
-		$this->overrideConfigValues( [ MainConfigNames::CapitalLinks => true ] );
+		$this->overrideConfigValues( [
+			MainConfigNames::CapitalLinks => true,
+			// getDefaultWikitextNS() may return a non-content namespace (e.g. Help) when
+			// NS_MAIN is claimed by another extension's content model. Mark it as a content
+			// namespace so the document routes to the _content index deterministically.
+			MainConfigNames::ContentNamespaces => [ $this->getDefaultWikitextNS() ],
+		] );
 		$expectedMetadata = [
 			'cluster_group' => 'my_group',
 			'noop_hints' => [
@@ -68,7 +75,7 @@ class QueryBuildDocumentTest extends ApiTestCase {
 			],
 		];
 
-		$page = $this->getNonexistingTestPage( Title::makeTitle( NS_MAIN, self::PAGE_TITLE ) );
+		$page = $this->getNonexistingTestPage( Title::makeTitle( $this->getDefaultWikitextNS(), self::PAGE_TITLE ) );
 
 		$status = $this->editPage( $page, self::CONTENT_FIRST_REV );
 		$firstRevision = $status->getNewRevision();
@@ -202,11 +209,11 @@ class QueryBuildDocumentTest extends ApiTestCase {
 	 * @return array{0:Title,1:int} the target title and the redirect's page id
 	 */
 	private function createRedirect(): array {
-		$target = $this->getNonexistingTestPage( Title::makeTitle( NS_MAIN, 'RedirDocTarget' ) );
+		$target = $this->getNonexistingTestPage( Title::makeTitle( $this->getDefaultWikitextNS(), 'RedirDocTarget' ) );
 		$this->editPage( $target, 'Target content' );
 
-		$redirect = $this->getNonexistingTestPage( Title::makeTitle( NS_MAIN, 'RedirDocAlpha' ) );
-		$status = $this->editPage( $redirect, '#REDIRECT [[RedirDocTarget]]' );
+		$redirect = $this->getNonexistingTestPage( Title::makeTitle( $this->getDefaultWikitextNS(), 'RedirDocAlpha' ) );
+		$status = $this->editPage( $redirect, '#REDIRECT [[' . $target->getTitle()->getPrefixedText() . ']]' );
 		$redirectId = $status->getNewRevision()->getPage()->getId();
 
 		// See parser-cache note in test_content_extraction().
@@ -221,12 +228,13 @@ class QueryBuildDocumentTest extends ApiTestCase {
 	 * @return array
 	 */
 	private function expectedSecondDoc( RevisionRecord $revision, RevisionRecord $firstRevision ): array {
+		$title = Title::makeTitle( $this->getDefaultWikitextNS(), self::PAGE_TITLE );
 		return [
 			'version' => $revision->getId(),
-			'namespace' => 0,
-			'namespace_text' => '',
+			'namespace' => $title->getNamespace(),
+			'namespace_text' => Util::getNamespaceText( $title ),
 			'wiki' => WikiMap::getCurrentWikiId(),
-			'title' => self::PAGE_TITLE,
+			'title' => $title->getText(),
 			'timestamp' => MWTimestamp::convert( TS_ISO_8601, $revision->getTimestamp() ),
 			'create_timestamp' => MWTimestamp::convert( TS_ISO_8601, $firstRevision->getTimestamp() ),
 			'category' => [ "Category2" ],
@@ -247,12 +255,13 @@ class QueryBuildDocumentTest extends ApiTestCase {
 	}
 
 	private function expectedFirstDoc( RevisionRecord $revision, RevisionRecord $firstRevision ): array {
+		$title = Title::makeTitle( $this->getDefaultWikitextNS(), self::PAGE_TITLE );
 		return [
 			'version' => $revision->getId(),
-			'namespace' => 0,
-			'namespace_text' => '',
+			'namespace' => $title->getNamespace(),
+			'namespace_text' => Util::getNamespaceText( $title ),
 			'wiki' => WikiMap::getCurrentWikiId(),
-			'title' => self::PAGE_TITLE,
+			'title' => $title->getText(),
 			'timestamp' => MWTimestamp::convert( TS_ISO_8601, $revision->getTimestamp() ),
 			'create_timestamp' => MWTimestamp::convert( TS_ISO_8601, $firstRevision->getTimestamp() ),
 			'category' => [ "Category1" ],

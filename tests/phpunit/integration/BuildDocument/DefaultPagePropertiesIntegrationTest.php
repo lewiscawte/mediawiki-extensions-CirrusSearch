@@ -28,8 +28,8 @@ class DefaultPagePropertiesIntegrationTest extends \MediaWikiIntegrationTestCase
 	}
 
 	public function testCreateTimestamp() {
-		$pageName = 'testCreateTimestamp' . mt_rand();
-		$page = $this->getServiceContainer()->getWikiPageFactory()->newFromTitle( Title::newFromText( $pageName ) );
+		$title = Title::makeTitle( $this->getDefaultWikitextNS(), 'TestCreateTimestamp' . mt_rand() );
+		$page = $this->getServiceContainer()->getWikiPageFactory()->newFromTitle( $title );
 
 		// Control time to ensure the revision timestamps differ
 		$currentTime = 12345;
@@ -38,7 +38,7 @@ class DefaultPagePropertiesIntegrationTest extends \MediaWikiIntegrationTestCase
 		} );
 		try {
 			// first revision should match create timestamp with revision
-			$status = $this->editPage( $pageName, 'phpunit' );
+			$status = $this->editPage( $page, 'phpunit' );
 			$this->assertStatusOK( $status );
 			$created = wfTimestamp(
 				TS_ISO_8601,
@@ -51,7 +51,7 @@ class DefaultPagePropertiesIntegrationTest extends \MediaWikiIntegrationTestCase
 
 			// With a second revision the create timestamp should still be the old one.
 			$currentTime += 42;
-			$status = $this->editPage( $pageName, 'phpunit and maybe other things' );
+			$status = $this->editPage( $page, 'phpunit and maybe other things' );
 			$revision = $status->getValue()['revision-record'];
 			$this->assertStatusOK( $status );
 			$doc = $this->buildDoc( $page, $revision );

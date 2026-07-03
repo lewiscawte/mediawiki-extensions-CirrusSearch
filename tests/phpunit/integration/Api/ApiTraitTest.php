@@ -68,13 +68,13 @@ class ApiTraitTest extends CirrusIntegrationTestCase {
 	 */
 	private function missingTitle( string $dbKey ): Title {
 		$this->getServiceContainer()->getLinkCache()->clear();
-		$title = Title::makeTitle( NS_MAIN, $dbKey );
+		$title = Title::makeTitle( $this->getDefaultWikitextNS(), $dbKey );
 		$this->assertSame( 0, $title->getId(), 'precondition: page must be missing from SQL' );
 		return $title;
 	}
 
 	public function testRedirectScopeRecoversDeletedPageId() {
-		$page = $this->getNonexistingTestPage( Title::makeTitle( NS_MAIN, 'ApiTraitDeleted' ) );
+		$page = $this->getNonexistingTestPage( Title::makeTitle( $this->getDefaultWikitextNS(), 'ApiTraitDeleted' ) );
 		$realId = $this->editPage( $page, 'content' )->getNewRevision()->getPage()->getId();
 		$this->deletePage( $page, 'test' );
 
@@ -85,11 +85,13 @@ class ApiTraitTest extends CirrusIntegrationTestCase {
 	}
 
 	public function testRedirectScopeReturnsRedirectsOwnIdWhileDefaultChasesTarget() {
-		$target = $this->getNonexistingTestPage( Title::makeTitle( NS_MAIN, 'ApiTraitTarget' ) );
+		$target = $this->getNonexistingTestPage( Title::makeTitle( $this->getDefaultWikitextNS(), 'ApiTraitTarget' ) );
 		$targetId = $this->editPage( $target, 'target content' )->getNewRevision()->getPage()->getId();
 
-		$redirect = $this->getNonexistingTestPage( Title::makeTitle( NS_MAIN, 'ApiTraitRedirect' ) );
-		$redirectId = $this->editPage( $redirect, '#REDIRECT [[ApiTraitTarget]]' )
+		$redirect = $this->getNonexistingTestPage(
+			Title::makeTitle( $this->getDefaultWikitextNS(), 'ApiTraitRedirect' )
+		);
+		$redirectId = $this->editPage( $redirect, '#REDIRECT [[' . $target->getTitle()->getPrefixedText() . ']]' )
 			->getNewRevision()->getPage()->getId();
 		$this->deletePage( $redirect, 'test' );
 
