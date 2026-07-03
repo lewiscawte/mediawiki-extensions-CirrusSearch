@@ -24,6 +24,10 @@ class ElasticaErrorHandlerTest extends CirrusTestCase {
 				'rejected',
 				self::newResponseException( 'too_many_clauses', 'Too many boolean clauses' ),
 			],
+			'Too many nested clauses is rejected' => [
+				'rejected',
+				self::newResponseException( 'too_many_nested_clauses', 'Too many nested boolean clauses' ),
+			],
 			'NPE is failed' => [
 				'failed',
 				self::newResponseException( 'null_pointer_exception', 'Bug somewhere' ),

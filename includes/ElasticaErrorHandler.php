@@ -142,6 +142,7 @@ class ElasticaErrorHandler {
 					'^query_shard_exception$',
 					'^illegal_argument_exception$',
 					'^too_many_clauses$',
+					'^too_many_nested_clauses$',
 					'^parsing_exception$',
 					'^parse_exception$',
 					'^script_exception$',
@@ -278,6 +279,13 @@ class ElasticaErrorHandler {
 			return [ Status::newFatal(
 				'cirrussearch-regex-too-complex-error' ),
 				$cause['reason']
+			];
+		}
+
+		if ( in_array( $cause['type'], [ 'too_many_nested_clauses', 'too_many_clauses' ] ) ) {
+			return [ Status::newFatal(
+				'cirrussearch-query-too-complex-error' ),
+					 $cause['reason']
 			];
 		}
 
